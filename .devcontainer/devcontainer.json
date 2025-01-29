@@ -23,6 +23,7 @@
 			"moby": false,
 			"dockerDashComposeVersion": "v2"
     	},
+			"ghcr.io/devcontainers/features/node": "latest",
 		"github-cli": "latest"
 	},
 
