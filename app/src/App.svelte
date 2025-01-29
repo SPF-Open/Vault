@@ -2,7 +2,7 @@
   import "@gzlab/uui/main.css";
 
   import { onMount } from "svelte";
-  import { migrated } from "./lib/store";
+  import { errors, migrated } from "./lib/store";
 
   import Loading from "@gzlab/uui/gauge/Loading.svelte";
   import SideNav from "@gzlab/uui/nav/SideNav.svelte";
@@ -11,19 +11,32 @@
   import Main from "./lib/Main.svelte";
   import { Modal } from "@gzlab/uui/index";
 
-  onMount(async () => {
-    await migrate().then(() => {
-      migrated.set(true);
-    });
+  onMount(() => {
+    migrate()
+      .then(() => {
+        migrated.set(true);
+      })
+      .catch((err) => {
+        errors.update((errors) => {
+          return [...errors, 
+          {title: "Migration Error", message: err.message}];
+        });
+      });
   });
 </script>
 
-{#if !$migrated}
+{#if !$migrated && $errors.length === 0}
   <Modal closeButton={false}>
     <div class="modal">
       <Loading show size="md" />
       <h2>Loading all modules 🐱‍🏍</h2>
     </div>
+    {#each $errors as error}
+      <div class="modal">
+        <h2>{error.title}</h2>
+        <p>{error.message}</p>
+      </div>
+    {/each}
   </Modal>
 {/if}
 
