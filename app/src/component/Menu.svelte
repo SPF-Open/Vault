@@ -1,9 +1,15 @@
 <script lang="ts">
   import { Card } from "@gzlab/uui/index";
   import Button from "@gzlab/uui/input/Button.svelte";
-  import { exportData } from "$lib/db";
+  import { clearDb, exportData } from "$lib/db";
+  import { refreshAssessment } from "$lib/store";
 
   let link: HTMLAnchorElement;
+
+  const onNew = () => {
+    clearDb();
+    refreshAssessment();
+  };
 
   const onExport = async () => {
     console.log("Exporting database");
@@ -27,16 +33,18 @@
   <Card>
     <div class="title" slot="title">📦 Database</div>
     <div class="control">
-      <Button type="danger">New</Button>
-      <Button type="info">Open</Button>
+      <Button type="danger" onClick={onNew}>New</Button>
+      <Button type="info">Import</Button>
       <Button type="success" onClick={onExport}>Export</Button>
-      <Card>
-        <div class="title" slot="title">📃 Assessment</div>
-        <div class="control">
-          <Button type="info">Add</Button>
-          <Button type="">View</Button>
-        </div>
-      </Card>
+      <div class="child">
+        <Card>
+          <div class="title" slot="title">📃 Assessment</div>
+          <div class="control">
+            <Button type="info">Import</Button>
+            <Button type="">View</Button>
+          </div>
+        </Card>
+      </div>
     </div>
   </Card>
 </div>
@@ -56,5 +64,8 @@
   }
   .download {
     display: none;
+  }
+  .child{
+    margin-top: 0.3rem;
   }
 </style>

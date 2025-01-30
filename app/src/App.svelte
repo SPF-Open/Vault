@@ -82,6 +82,9 @@
     justify-content: center;
     align-items: center;
   }
+  .modal h2{
+    margin-bottom: 5px;
+  }
   .extraTools {
     display: grid;
     grid-template-columns: repeat(2, 1fr);

@@ -3,6 +3,7 @@
   import { refreshAssessment } from "$lib/store";
 
   import AssessmentView from "$view/Assessment.svelte";
+    import Search from "./Search.svelte";
 
   const insert = async () => {
     await db
@@ -21,7 +22,7 @@
 </script>
 
 <div class="main">
-  <AssessmentView />
+  <Search />
 </div>
 
 <style>
