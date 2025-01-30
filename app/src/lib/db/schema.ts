@@ -12,7 +12,7 @@ export const typeEnum = pgEnum('type', ['MCQ', 'OQ', 'BOTH'])
 
 export const assessmentSchema = pgTable("assessment", {
   id: serial("id").primaryKey(),
-  links: serial("links").notNull(),
+  links: serial("links"),
 
   title: text("title").unique().notNull(),
   selection: text("selection").notNull(),
