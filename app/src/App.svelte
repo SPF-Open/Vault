@@ -29,7 +29,7 @@
   <Modal closeButton={false}>
     <div class="modal">
       <Loading show size="md" />
-      <h2>Loading all modules 🐱‍🏍</h2>
+      <h2>Loading all modules 🦄</h2>
     </div>
     {#each $errors as error}
       <div class="modal">
