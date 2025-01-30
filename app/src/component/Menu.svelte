@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Card } from "@gzlab/uui/index";
   import Button from "@gzlab/uui/input/Button.svelte";
-  import { exportData } from "./db";
+  import { exportData } from "$lib/db";
 
   let link: HTMLAnchorElement;
 
@@ -13,6 +13,7 @@
       link.href = URL.createObjectURL(data.blob);
       link.download = "database.sql";
       link.click();
+      console.log("Downloaded");
     }
   };
 </script>
@@ -24,18 +25,18 @@
 
 <div class="menu">
   <Card>
-    <div class="title" slot="title">Database</div>
+    <div class="title" slot="title">📦 Database</div>
     <div class="control">
       <Button type="danger">New</Button>
       <Button type="info">Open</Button>
       <Button type="success" onClick={onExport}>Export</Button>
-    </div>
-  </Card>
-
-  <Card>
-    <div class="title" slot="title">Assesment</div>
-    <div class="control">
-      <Button type="info">Add</Button>
+      <Card>
+        <div class="title" slot="title">📃 Assessment</div>
+        <div class="control">
+          <Button type="info">Add</Button>
+          <Button type="">View</Button>
+        </div>
+      </Card>
     </div>
   </Card>
 </div>

@@ -2,6 +2,8 @@ import { PGlite } from '@electric-sql/pglite';
 import { drizzle } from 'drizzle-orm/pglite';
 import * as schema from './schema';
 
+export { schema };
+
 // In-memory Postgres
 const client = new PGlite('idb://main');
 const db = drizzle(client, { schema });

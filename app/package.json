@@ -14,17 +14,17 @@
     "@sveltejs/vite-plugin-svelte": "^5.0.3",
     "@tsconfig/svelte": "^5.0.4",
     "@types/bun": "^1.2.1",
-    "svelte": "^5.15.0",
-    "svelte-check": "^4.1.1",
-    "typescript": "~5.6.2",
-    "vite": "^6.0.5"
+    "svelte": "^5.19.5",
+    "svelte-check": "^4.1.4",
+    "typescript": "~5.6.3",
+    "vite": "^6.0.11"
   },
   "dependencies": {
     "@duckdb/duckdb-wasm": "^1.29.0",
     "@electric-sql/pglite": "^0.2.16",
-    "@gzlab/uui": "^0.0.29",
+    "@gzlab/uui": "^0.0.30",
     "dotenv": "^16.4.7",
-    "drizzle-kit": "^0.30.3",
-    "drizzle-orm": "^0.39.0"
+    "drizzle-kit": "^0.30.4",
+    "drizzle-orm": "^0.39.1"
   }
 }

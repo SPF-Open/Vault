@@ -1,13 +1,12 @@
 <script lang="ts">
-  import Button from "@gzlab/uui/input/Button.svelte";
-  import db from "./db";
-  import { assessmentSchema } from "./db/schema";
+  import db, {schema} from "$lib/db";
+  import { refreshAssessment } from "$lib/store";
 
+  import AssessmentView from "$view/Assessment.svelte";
 
-  
   const insert = async () => {
     await db
-      .insert(assessmentSchema)
+      .insert(schema.assessmentSchema)
       .values({
         selection: "BNF24001",
         title: "Assessment" + Math.floor(Math.random() * 100),
@@ -17,12 +16,12 @@
       })
       .execute();
     console.log("Inserted");
+    refreshAssessment();
   };
 </script>
 
 <div class="main">
-  Main
-  <Button onClick={insert}>Insert</Button>
+  <AssessmentView />
 </div>
 
 <style>
@@ -30,5 +29,6 @@
     display: grid;
     gap: 0.5rem;
     flex: 1;
+    padding: 0.3rem;
   }
 </style>

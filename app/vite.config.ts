@@ -7,4 +7,11 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['@electric-sql/pglite'],
   },
+  resolve: {
+    alias: {
+      $lib: '/src/lib',
+      $comp: '/src/component',
+      $view: '/src/component/view',
+    },
+  },
 })
