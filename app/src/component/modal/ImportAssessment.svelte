@@ -3,19 +3,26 @@
   import Button from "@gzlab/uui/input/Button.svelte";
   import DropDown from "@gzlab/uui/input/DropDown.svelte";
   import DropDownItem from "@gzlab/uui/input/DropDownItem.svelte";
-  import { writable } from "svelte/store";
+  import { derived, writable } from "svelte/store";
   import * as XLSX from "xlsx";
+
+  import { MCQ, OQ } from "@lv00/tao-parser/web";
 
   export let state = false;
   let advanced = false;
 
   type Columns = {
-    competence: string;
+    name: string;
+    competency: string;
     dimension: string;
     indicator: string;
     question: string;
-    answer: string;
+    correct: string;
+    skip: number;
   };
+
+  const workbook = writable<XLSX.WorkBook>();
+  const fileList = writable<FileList | undefined>();
 
   type Template = "BOSA" | "FIN" | "OTHER";
   const template = writable<Template>("BOSA");
@@ -28,51 +35,85 @@
 
   const defaultColumns = new Map<Template, { OQ: Columns; MCQ: Columns }>();
 
+  const columns = writable<Columns>(defaultColumns.get("BOSA")?.MCQ);
+
+  sheets.subscribe((s) => {
+    const data = s
+      .filter((sheet) => sheet.selected)
+      .map((sheet) => {
+        const ws = $workbook.Sheets[sheet.name];
+        let questions: MCQ[] | OQ[] = [];
+        try {
+          if ($type === "OQ") {
+            questions = OQ.fromSHeet(
+              ws,
+              { ...$columns },
+              { skip: $columns.skip },
+            );
+          } else {
+            questions = MCQ.fromSHeet(
+              ws,
+              { ...$columns },
+              { skip: $columns.skip, alternative: 4 },
+            );
+          }
+        } catch (e) {
+          console.error(e);
+        }
+        return questions;
+      });
+    console.log(data);
+  });
+
   defaultColumns.set("BOSA", {
     MCQ: {
-      competence: "C",
+      competency: "C",
       dimension: "D",
       indicator: "E",
+      name: "F",
       question: "H",
-      answer: "I",
+      correct: "I",
+      skip: 16,
     },
     OQ: {
-      competence: "C",
+      competency: "C",
       dimension: "D",
       indicator: "E",
+      name: "F",
       question: "H",
-      answer: "I",
+      correct: "I",
+      skip: 16,
     },
   });
 
   defaultColumns.set("FIN", {
     MCQ: {
-      competence: "A",
+      competency: "A",
       dimension: "B",
       indicator: "C",
+      name: "D",
       question: "F",
-      answer: "G",
+      correct: "G",
+      skip: 7,
     },
     OQ: {
-      competence: "A",
+      competency: "A",
       dimension: "B",
       indicator: "C",
+      name: "D",
       question: "F",
-      answer: "G",
+      correct: "G",
+      skip: 16,
     },
   });
 
-  const fileList = writable<FileList | undefined>();
-  const workbook = writable();
-  const columns = writable<Columns>();
-
-  template.subscribe((template) => {
-    if (template === "OTHER") return;
-    columns.update((c) => {
-      const column = defaultColumns.get(template);
-      if (!column) return c;
-      return column[$type];
-    });
+  derived([template, type], ([$template, $type]) => [
+    $template,
+    $type,
+  ]).subscribe(() => {
+    const column = defaultColumns.get($template);
+    if (!column) return;
+    columns.update(() => column[$type]);
   });
 
   fileList.subscribe(async (f) => {
@@ -82,7 +123,7 @@
     const book = XLSX.read(data);
     workbook.update(() => book);
     sheets.update(() =>
-      book.SheetNames.map((name) => ({ name, selected: false }))
+      book.SheetNames.map((name) => ({ name, selected: false })),
     );
   });
 </script>
@@ -153,25 +194,49 @@
           <div class="flex-col">
             <h4>Column</h4>
             <div class="grid">
-              <div class="flex-row char">
-                <label for="">Competence</label>
-                <Char max="Z" bind:value={$columns.competence} />
+              <div class="flex-col">
+                <div class="flex-row char">
+                  <label for="">Competency</label>
+                  <Char
+                    max="Z"
+                    bind:value={$columns.competency}
+                    disabled={$template !== "OTHER"}
+                  />
+                </div>
+                <div class="flex-row char">
+                  <label for="">Dimension</label>
+                  <Char
+                    max="Z"
+                    bind:value={$columns.dimension}
+                    disabled={$template !== "OTHER"}
+                  />
+                </div>
+                <div class="flex-row char">
+                  <label for="">Indicator</label>
+                  <Char
+                    max="Z"
+                    bind:value={$columns.indicator}
+                    disabled={$template !== "OTHER"}
+                  />
+                </div>
               </div>
-              <div class="flex-row char">
-                <label for="">Dimension</label>
-                <Char max="Z" bind:value={$columns.dimension} />
-              </div>
-              <div class="flex-row char">
-                <label for="">Indicator</label>
-                <Char max="Z" bind:value={$columns.indicator} />
-              </div>
-              <div class="flex-row char">
-                <label for="">Question</label>
-                <Char max="Z" bind:value={$columns.question} />
-              </div>
-              <div class="flex-row char">
-                <label for="">Answer</label>
-                <Char max="Z" bind:value={$columns.answer} />
+              <div class="flex-col">
+                <div class="flex-row char">
+                  <label for="">Question</label>
+                  <Char
+                    max="Z"
+                    bind:value={$columns.question}
+                    disabled={$template !== "OTHER"}
+                  />
+                </div>
+                <div class="flex-row char">
+                  <label for="">Answer</label>
+                  <Char
+                    max="Z"
+                    bind:value={$columns.correct}
+                    disabled={$template !== "OTHER"}
+                  />
+                </div>
               </div>
             </div>
           </div>
