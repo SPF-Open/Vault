@@ -23,8 +23,10 @@
     "@duckdb/duckdb-wasm": "^1.29.0",
     "@electric-sql/pglite": "^0.2.16",
     "@gzlab/uui": "^0.0.30",
+    "@lv00/tao-parser": "^0.0.5",
     "dotenv": "^16.4.7",
     "drizzle-kit": "^0.30.4",
-    "drizzle-orm": "^0.39.1"
+    "drizzle-orm": "^0.39.1",
+    "node-xlsx": "^0.24.0"
   }
 }

@@ -4,6 +4,8 @@
   import { clearDb, exportData } from "$lib/db";
   import { refreshAssessment } from "$lib/store";
 
+  import ImportAssessment from "$comp/modal/ImportAssessment.svelte"
+
   let link: HTMLAnchorElement;
 
   const onNew = () => {
@@ -22,7 +24,11 @@
       console.log("Downloaded");
     }
   };
+
+  let importAssessment = false;
 </script>
+
+<ImportAssessment bind:state={importAssessment} />
 
 <!-- svelte-ignore a11y_consider_explicit_label -->
 <!-- svelte-ignore a11y_invalid_attribute -->
@@ -40,7 +46,7 @@
         <Card>
           <div class="title" slot="title">📃 Assessment</div>
           <div class="control">
-            <Button type="info">Import</Button>
+            <Button type="info" onClick={() => importAssessment = true}>Import</Button>
             <Button type="">View</Button>
           </div>
         </Card>
@@ -65,7 +71,7 @@
   .download {
     display: none;
   }
-  .child{
+  .child {
     margin-top: 0.3rem;
   }
 </style>
