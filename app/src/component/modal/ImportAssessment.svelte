@@ -1,119 +1,38 @@
 <script lang="ts">
-  import { Card, Char, Modal, Switch } from "@gzlab/uui/index";
+  import { Card, Char, Modal, Numeric, Switch } from "@gzlab/uui/index";
   import Button from "@gzlab/uui/input/Button.svelte";
   import DropDown from "@gzlab/uui/input/DropDown.svelte";
   import DropDownItem from "@gzlab/uui/input/DropDownItem.svelte";
   import { derived, writable } from "svelte/store";
   import * as XLSX from "xlsx";
+  import { defaultColumns,defaultRows, type Columns, type Sheet, type Template, type Type } from "./helper";
 
   import { MCQ, OQ } from "@lv00/tao-parser/web";
 
   export let state = false;
   let advanced = false;
-
-  type Columns = {
-    name: string;
-    competency: string;
-    dimension: string;
-    indicator: string;
-    question: string;
-    correct: string;
-    skip: number;
-  };
-
-  const workbook = writable<XLSX.WorkBook>();
-  const fileList = writable<FileList | undefined>();
-
-  type Template = "BOSA" | "FIN" | "OTHER";
   const template = writable<Template>("BOSA");
-
-  type Type = "MCQ" | "OQ";
   const type = writable<Type>("MCQ");
-
-  type Sheet = { name: string; selected: boolean };
   const sheets = writable<Sheet[]>([]);
 
-  const defaultColumns = new Map<Template, { OQ: Columns; MCQ: Columns }>();
+  const fileList = writable<FileList | undefined>();
+  const workbook = writable();
+  const columns = writable<Columns>();
+  const row = writable<{ offset: number }>({ offset: 0 });
 
-  const columns = writable<Columns>(defaultColumns.get("BOSA")?.MCQ);
+  template.subscribe((template) => {
+    if (template === "OTHER") return;
+    columns.update((c) => {
+      const column = defaultColumns.get(template);
+      if (!column) return c;
+      return column[$type];
+    });
+    row.update((r) => {
+      const rows = defaultRows.get(template);
+      if (!rows) return r;
+      return rows[$type];
+    });
 
-  sheets.subscribe((s) => {
-    const data = s
-      .filter((sheet) => sheet.selected)
-      .map((sheet) => {
-        const ws = $workbook.Sheets[sheet.name];
-        let questions: MCQ[] | OQ[] = [];
-        try {
-          if ($type === "OQ") {
-            questions = OQ.fromSHeet(
-              ws,
-              { ...$columns },
-              { skip: $columns.skip },
-            );
-          } else {
-            questions = MCQ.fromSHeet(
-              ws,
-              { ...$columns },
-              { skip: $columns.skip, alternative: 4 },
-            );
-          }
-        } catch (e) {
-          console.error(e);
-        }
-        return questions;
-      });
-    console.log(data);
-  });
-
-  defaultColumns.set("BOSA", {
-    MCQ: {
-      competency: "C",
-      dimension: "D",
-      indicator: "E",
-      name: "F",
-      question: "H",
-      correct: "I",
-      skip: 16,
-    },
-    OQ: {
-      competency: "C",
-      dimension: "D",
-      indicator: "E",
-      name: "F",
-      question: "H",
-      correct: "I",
-      skip: 16,
-    },
-  });
-
-  defaultColumns.set("FIN", {
-    MCQ: {
-      competency: "A",
-      dimension: "B",
-      indicator: "C",
-      name: "D",
-      question: "F",
-      correct: "G",
-      skip: 7,
-    },
-    OQ: {
-      competency: "A",
-      dimension: "B",
-      indicator: "C",
-      name: "D",
-      question: "F",
-      correct: "G",
-      skip: 16,
-    },
-  });
-
-  derived([template, type], ([$template, $type]) => [
-    $template,
-    $type,
-  ]).subscribe(() => {
-    const column = defaultColumns.get($template);
-    if (!column) return;
-    columns.update(() => column[$type]);
   });
 
   fileList.subscribe(async (f) => {
@@ -194,49 +113,30 @@
           <div class="flex-col">
             <h4>Column</h4>
             <div class="grid">
-              <div class="flex-col">
-                <div class="flex-row char">
-                  <label for="">Competency</label>
-                  <Char
-                    max="Z"
-                    bind:value={$columns.competency}
-                    disabled={$template !== "OTHER"}
-                  />
-                </div>
-                <div class="flex-row char">
-                  <label for="">Dimension</label>
-                  <Char
-                    max="Z"
-                    bind:value={$columns.dimension}
-                    disabled={$template !== "OTHER"}
-                  />
-                </div>
-                <div class="flex-row char">
-                  <label for="">Indicator</label>
-                  <Char
-                    max="Z"
-                    bind:value={$columns.indicator}
-                    disabled={$template !== "OTHER"}
-                  />
-                </div>
+              <div class="flex-row char">
+                <label for="">Competence</label>
+                <Char max="ZZ" bind:value={$columns.competence} />
               </div>
-              <div class="flex-col">
-                <div class="flex-row char">
-                  <label for="">Question</label>
-                  <Char
-                    max="Z"
-                    bind:value={$columns.question}
-                    disabled={$template !== "OTHER"}
-                  />
-                </div>
-                <div class="flex-row char">
-                  <label for="">Answer</label>
-                  <Char
-                    max="Z"
-                    bind:value={$columns.correct}
-                    disabled={$template !== "OTHER"}
-                  />
-                </div>
+              <div class="flex-row char">
+                <label for="">Question</label>
+                <Char max="ZZ" bind:value={$columns.question} />
+              </div>
+
+              <div class="flex-row char">
+                <label for="">Dimension</label>
+                <Char max="ZZ" bind:value={$columns.dimension} />
+              </div>
+              <div class="flex-row char">
+                <label for="">Answer</label>
+                <Char max="ZZ" bind:value={$columns.answer} />
+              </div>
+              <div class="flex-row char">
+                <label for="">Indicator</label>
+                <Char max="ZZ" bind:value={$columns.indicator} />
+              </div>
+              <div class="flex-row char">
+                <label for="">Offset</label>
+                <Numeric max={99} bind:value={$row.offset} />
               </div>
             </div>
           </div>
