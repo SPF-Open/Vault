@@ -3,11 +3,19 @@
   import Button from "@gzlab/uui/input/Button.svelte";
   import DropDown from "@gzlab/uui/input/DropDown.svelte";
   import DropDownItem from "@gzlab/uui/input/DropDownItem.svelte";
-  import { derived, writable } from "svelte/store";
-  import * as XLSX from "xlsx";
-  import { defaultColumns,defaultRows, type Columns, type Sheet, type Template, type Type } from "./helper";
 
-  import { MCQ, OQ } from "@lv00/tao-parser/web";
+  import { MCQ } from "@lv00/tao-parser";
+
+  import { writable } from "svelte/store";
+  import * as XLSX from "xlsx";
+  import {
+    defaultColumns,
+    defaultRows,
+    type Columns,
+    type Sheet,
+    type Template,
+    type Type,
+  } from "./helper";
 
   export let state = false;
   let advanced = false;
@@ -16,9 +24,11 @@
   const sheets = writable<Sheet[]>([]);
 
   const fileList = writable<FileList | undefined>();
-  const workbook = writable();
+  const workbook = writable<XLSX.WorkBook>();
   const columns = writable<Columns>();
   const row = writable<{ offset: number }>({ offset: 0 });
+
+  const questions = new Map();
 
   template.subscribe((template) => {
     if (template === "OTHER") return;
@@ -32,7 +42,6 @@
       if (!rows) return r;
       return rows[$type];
     });
-
   });
 
   fileList.subscribe(async (f) => {
@@ -42,20 +51,40 @@
     const book = XLSX.read(data);
     workbook.update(() => book);
     sheets.update(() =>
-      book.SheetNames.map((name) => ({ name, selected: false })),
+      book.SheetNames.map((name) => ({ name, selected: false }))
     );
+  });
+
+  sheets.subscribe(async (s) => {
+    if (!s.length) return;
+    const sheet = s.find((sheet) => sheet.selected);
+    if (!sheet) return;
+    const book = $workbook;
+    const data = book.Sheets[sheet.name];
+    const question = MCQ.fromSHeet(data, $columns, { ...$row, alternative: 4 });
+    console.log(data, question);
+    questions.set(sheet.name, question);
   });
 </script>
 
 <Modal bind:state closeButton={false} size="lg">
   <div class="title" slot="title">Import Assessment</div>
-  <div class="body">
-    {#if !$sheets.length}
-      <p>Upload a file to import assessment</p>
-      <input type="file" name="" id="" accept=".xlsx" bind:files={$fileList} />
-    {:else}
-      <div class="grid">
-        <Card>
+  <div class="flex-col body">
+    <Card>
+      <div class="flex-col">
+        <h4>Upload a file to import assessment</h4>
+        <input
+          type="file"
+          name=""
+          id=""
+          accept=".xlsx"
+          bind:files={$fileList}
+        />
+      </div>
+    </Card>
+    {#if $sheets.length}
+      <div class="flex-row options">
+        <Card size="sm">
           <h4>General</h4>
           <div class="flex-col">
             <div class="flex-row">
@@ -95,44 +124,36 @@
             </div>
           </div>
         </Card>
-        <Card></Card>
-        <Card>
-          <div class="flex-col">
-            <h4>Sheets to import</h4>
-            <div class="flex-col sheets">
-              {#each $sheets as sheet}
-                <div class="flex-row">
-                  <Switch bind:checked={sheet.selected} />
-                  {sheet.name}
-                </div>
-              {/each}
-            </div>
-          </div>
-        </Card>
-        <Card>
+        <Card size="sm">
           <div class="flex-col">
             <h4>Column</h4>
-            <div class="grid">
+            <div class="flex-col">
               <div class="flex-row char">
                 <label for="">Competence</label>
                 <Char max="ZZ" bind:value={$columns.competence} />
               </div>
               <div class="flex-row char">
-                <label for="">Question</label>
-                <Char max="ZZ" bind:value={$columns.question} />
-              </div>
-
-              <div class="flex-row char">
                 <label for="">Dimension</label>
                 <Char max="ZZ" bind:value={$columns.dimension} />
               </div>
               <div class="flex-row char">
-                <label for="">Answer</label>
-                <Char max="ZZ" bind:value={$columns.answer} />
-              </div>
-              <div class="flex-row char">
                 <label for="">Indicator</label>
                 <Char max="ZZ" bind:value={$columns.indicator} />
+              </div>
+            </div>
+          </div></Card
+        >
+        <Card size="sm">
+          <div class="flex-col">
+            <h4>Rows</h4>
+            <div class="flex-col">
+              <div class="flex-row char">
+                <label for="">Question</label>
+                <Char max="ZZ" bind:value={$columns.question} />
+              </div>
+              <div class="flex-row char">
+                <label for="">Answer</label>
+                <Char max="ZZ" bind:value={$columns.answer} />
               </div>
               <div class="flex-row char">
                 <label for="">Offset</label>
@@ -142,14 +163,32 @@
           </div>
         </Card>
       </div>
+      <Card>
+        <div class="flex-col">
+          <h4>Sheets to import</h4>
+          <div class="flex-col sheets">
+            {#each $sheets as sheet}
+              <div class="flex-row">
+                <Switch bind:checked={sheet.selected} />
+                {sheet.name}
+              </div>
+            {/each}
+          </div>
+        </div>
+      </Card>
+      <div class="flex-row"></div>
     {/if}
-    <!-- {JSON.stringify($columns)} -->
   </div>
+  <!-- {JSON.stringify($columns)} -->
+  <pre>
+  {JSON.stringify(Array.from(questions), null, 2)}
+   </pre>
 
   <div class="footer" slot="footer">
     <Button type="danger" onClick={() => (state = false)}>Cancel</Button>
     <Button onClick={() => (advanced = !advanced)} disabled>Advanced</Button>
-    <Button type="info">Import</Button>
+    <Button disabled={!$workbook}>Preview</Button>
+    <Button type="info" disabled={!$workbook}>Next</Button>
   </div>
 </Modal>
 
@@ -171,23 +210,21 @@
     flex-direction: column;
     gap: 0.3rem;
   }
-  .grid {
-    display: grid;
-    gap: 0.3rem;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .options {
+    align-items: stretch;
   }
   label {
     margin-right: auto;
   }
-  .char {
-    max-width: 130px;
-  }
   .sheets {
     flex-wrap: wrap;
-    max-height: 100px;
+    max-height: 75px;
+    align-content: start;
+    gap: 0.3rem 0.6rem;
   }
   h4 {
     margin-right: auto;
+    margin-bottom: 0.3rem;
   }
   .template {
     width: 45px;
