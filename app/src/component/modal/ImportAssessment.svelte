@@ -1,70 +1,24 @@
 <script lang="ts">
-  import { Card, Char, Modal, Switch } from "@gzlab/uui/index";
+  import { Card, Char, Modal, Numeric, Switch } from "@gzlab/uui/index";
   import Button from "@gzlab/uui/input/Button.svelte";
   import DropDown from "@gzlab/uui/input/DropDown.svelte";
   import DropDownItem from "@gzlab/uui/input/DropDownItem.svelte";
   import { writable } from "svelte/store";
   import * as XLSX from "xlsx";
+  import { defaultColumns,defaultRows, type Columns, type Sheet, type Template, type Type } from "./helper";
 
   export let state = false;
   let advanced = false;
 
-  type Columns = {
-    competence: string;
-    dimension: string;
-    indicator: string;
-    question: string;
-    answer: string;
-  };
-
-  type Template = "BOSA" | "FIN" | "OTHER";
   const template = writable<Template>("BOSA");
-
-  type Type = "MCQ" | "OQ";
   const type = writable<Type>("MCQ");
-
-  type Sheet = { name: string; selected: boolean };
   const sheets = writable<Sheet[]>([]);
 
-  const defaultColumns = new Map<Template, { OQ: Columns; MCQ: Columns }>();
-
-  defaultColumns.set("BOSA", {
-    MCQ: {
-      competence: "C",
-      dimension: "D",
-      indicator: "E",
-      question: "H",
-      answer: "I",
-    },
-    OQ: {
-      competence: "C",
-      dimension: "D",
-      indicator: "E",
-      question: "H",
-      answer: "I",
-    },
-  });
-
-  defaultColumns.set("FIN", {
-    MCQ: {
-      competence: "A",
-      dimension: "B",
-      indicator: "C",
-      question: "F",
-      answer: "G",
-    },
-    OQ: {
-      competence: "A",
-      dimension: "B",
-      indicator: "C",
-      question: "F",
-      answer: "G",
-    },
-  });
 
   const fileList = writable<FileList | undefined>();
   const workbook = writable();
   const columns = writable<Columns>();
+  const row = writable<{ offset: number }>({ offset: 0 });
 
   template.subscribe((template) => {
     if (template === "OTHER") return;
@@ -72,6 +26,11 @@
       const column = defaultColumns.get(template);
       if (!column) return c;
       return column[$type];
+    });
+    row.update((r) => {
+      const rows = defaultRows.get(template);
+      if (!rows) return r;
+      return rows[$type];
     });
   });
 
@@ -155,23 +114,28 @@
             <div class="grid">
               <div class="flex-row char">
                 <label for="">Competence</label>
-                <Char max="Z" bind:value={$columns.competence} />
-              </div>
-              <div class="flex-row char">
-                <label for="">Dimension</label>
-                <Char max="Z" bind:value={$columns.dimension} />
-              </div>
-              <div class="flex-row char">
-                <label for="">Indicator</label>
-                <Char max="Z" bind:value={$columns.indicator} />
+                <Char max="ZZ" bind:value={$columns.competence} />
               </div>
               <div class="flex-row char">
                 <label for="">Question</label>
-                <Char max="Z" bind:value={$columns.question} />
+                <Char max="ZZ" bind:value={$columns.question} />
+              </div>
+
+              <div class="flex-row char">
+                <label for="">Dimension</label>
+                <Char max="ZZ" bind:value={$columns.dimension} />
               </div>
               <div class="flex-row char">
                 <label for="">Answer</label>
-                <Char max="Z" bind:value={$columns.answer} />
+                <Char max="ZZ" bind:value={$columns.answer} />
+              </div>
+              <div class="flex-row char">
+                <label for="">Indicator</label>
+                <Char max="ZZ" bind:value={$columns.indicator} />
+              </div>
+              <div class="flex-row char">
+                <label for="">Offset</label>
+                <Numeric max={99} bind:value={$row.offset} />
               </div>
             </div>
           </div>
