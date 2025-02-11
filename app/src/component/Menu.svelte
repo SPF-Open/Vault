@@ -4,7 +4,7 @@
   import { clearDb, exportData } from "$lib/db";
   import { refreshAssessment } from "$lib/store";
 
-  import ImportAssessment from "$comp/modal/ImportAssessment.svelte"
+  import ImportAssessment from "$comp/modal/ImportAssessment.svelte";
 
   let link: HTMLAnchorElement;
 
@@ -28,7 +28,9 @@
   let importAssessment = false;
 </script>
 
-<ImportAssessment bind:state={importAssessment} />
+{#if importAssessment}
+  <ImportAssessment bind:state={importAssessment} />
+{/if}
 
 <!-- svelte-ignore a11y_consider_explicit_label -->
 <!-- svelte-ignore a11y_invalid_attribute -->
@@ -46,7 +48,9 @@
         <Card>
           <div class="title" slot="title">📃 Assessment</div>
           <div class="control">
-            <Button type="info" onClick={() => importAssessment = true}>Import</Button>
+            <Button type="info" onClick={() => (importAssessment = true)}
+              >Import</Button
+            >
             <Button type="">View</Button>
           </div>
         </Card>

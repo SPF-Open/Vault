@@ -3,17 +3,17 @@
   import Button from "@gzlab/uui/input/Button.svelte";
   import DropDown from "@gzlab/uui/input/DropDown.svelte";
   import DropDownItem from "@gzlab/uui/input/DropDownItem.svelte";
-  import { writable } from "svelte/store";
+  import { derived, writable } from "svelte/store";
   import * as XLSX from "xlsx";
   import { defaultColumns,defaultRows, type Columns, type Sheet, type Template, type Type } from "./helper";
 
+  import { MCQ, OQ } from "@lv00/tao-parser/web";
+
   export let state = false;
   let advanced = false;
-
   const template = writable<Template>("BOSA");
   const type = writable<Type>("MCQ");
   const sheets = writable<Sheet[]>([]);
-
 
   const fileList = writable<FileList | undefined>();
   const workbook = writable();
@@ -32,6 +32,7 @@
       if (!rows) return r;
       return rows[$type];
     });
+
   });
 
   fileList.subscribe(async (f) => {
@@ -41,7 +42,7 @@
     const book = XLSX.read(data);
     workbook.update(() => book);
     sheets.update(() =>
-      book.SheetNames.map((name) => ({ name, selected: false }))
+      book.SheetNames.map((name) => ({ name, selected: false })),
     );
   });
 </script>
